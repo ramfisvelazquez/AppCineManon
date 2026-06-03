@@ -2,7 +2,6 @@
 pages/reservas.py
 Sistema visual de selección de asientos con modal de pago.
 """
-
 import reflex as rx
 from cinemax.pages.styles.theme import *
 from cinemax.components.navbar import navbar
@@ -216,11 +215,11 @@ def pay_input(label: str, placeholder: str, value, on_change, input_type: str = 
 def payment_form_card() -> rx.Component:
     return rx.vstack(
         rx.text("💳 Datos de la Tarjeta", color=WHITE, font_size="16px", font_weight="700"),
-        pay_input("Número de tarjeta", "1234 5678 9012 3456", AppState.card_number, AppState.set_card_number),
-        pay_input("Nombre del titular", "Como aparece en la tarjeta", AppState.card_holder, AppState.set_card_holder),
+        pay_input("Número de tarjeta *", "1234 5678 9012 3456", AppState.card_number, AppState.set_card_number),
+        pay_input("Nombre del titular *", "Como aparece en la tarjeta", AppState.card_holder, AppState.set_card_holder),
         rx.hstack(
-            pay_input("Vencimiento", "MM/AA", AppState.card_expiry, AppState.set_card_expiry),
-            pay_input("CVV", "•••", AppState.card_cvv, AppState.set_card_cvv),
+            pay_input("Vencimiento *", "MM/AA", AppState.card_expiry, AppState.set_card_expiry),
+            pay_input("CVV *", "•••", AppState.card_cvv, AppState.set_card_cvv),
             spacing="3",
             width="100%",
         ),
@@ -245,7 +244,7 @@ def payment_form_wallet() -> rx.Component:
     return rx.vstack(
         rx.text("📱 MobilePay", color=WHITE, font_size="16px", font_weight="700"),
         rx.text("Recibirás una notificación push para aprobar el pago.", color=GRAY_MUTED, font_size="13px"),
-        pay_input("Número de teléfono", "+1 (809) 000-0000", AppState.wallet_phone, AppState.set_wallet_phone, "tel"),
+        pay_input("Número de teléfono *", "+1 (809) 000-0000", AppState.wallet_phone, AppState.set_wallet_phone, "tel"),
         rx.box(
             rx.hstack(
                 rx.icon("smartphone", size=14, color=GOLD_VIP),
@@ -267,8 +266,8 @@ def payment_form_transfer() -> rx.Component:
     return rx.vstack(
         rx.text("🏦 CineTransfer", color=WHITE, font_size="16px", font_weight="700"),
         rx.text("Transfiere desde tu banco de forma instantánea.", color=GRAY_MUTED, font_size="13px"),
-        pay_input("Banco de origen", "Ej: Banco Popular, BHD, Scotiabank", AppState.transfer_bank, AppState.set_transfer_bank),
-        pay_input("Número de cuenta / RNC", "000-000000-0", AppState.transfer_account, AppState.set_transfer_account),
+        pay_input("Banco de origen *", "Ej: Banco Popular, BHD, Scotiabank", AppState.transfer_bank, AppState.set_transfer_bank),
+        pay_input("Número de cuenta / RNC *", "000-000000-0", AppState.transfer_account, AppState.set_transfer_account),
         rx.box(
             rx.vstack(
                 rx.text("Cuenta destino CineMax:", color=WHITE_MUTED, font_size="12px", font_weight="700"),
@@ -342,6 +341,25 @@ def payment_step_form() -> rx.Component:
         rx.cond(AppState.selected_payment_method == "wallet", payment_form_wallet(), rx.box()),
         rx.cond(AppState.selected_payment_method == "transfer", payment_form_transfer(), rx.box()),
         rx.cond(AppState.selected_payment_method == "credits", payment_form_credits(), rx.box()),
+
+        # Error message
+        rx.cond(
+            AppState.payment_error != "",
+            rx.box(
+                rx.hstack(
+                    rx.icon("triangle-alert", size=15, color="#ff6b6b"),
+                    rx.text(AppState.payment_error, color="#ff6b6b", font_size="13px"),
+                    spacing="2",
+                    align="center",
+                ),
+                padding="10px 14px",
+                background="rgba(255,107,107,0.1)",
+                border="1px solid rgba(255,107,107,0.3)",
+                border_radius="8px",
+                width="100%",
+            ),
+            rx.box(),
+        ),
 
         # Order summary mini
         rx.box(
@@ -504,6 +522,273 @@ def payment_modal() -> rx.Component:
     )
 
 
+# ─── QR CODE SVG ──────────────────────────────────────────────────────────────
+
+def qr_svg() -> rx.Component:
+    """QR code visual decorativo."""
+    return rx.html("""
+    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="120" fill="#1a1a1a" rx="8"/>
+      <!-- Top-left finder pattern -->
+      <rect x="10" y="10" width="30" height="30" fill="none" stroke="#e50914" stroke-width="3" rx="2"/>
+      <rect x="17" y="17" width="16" height="16" fill="#e50914" rx="1"/>
+      <!-- Top-right finder pattern -->
+      <rect x="80" y="10" width="30" height="30" fill="none" stroke="#e50914" stroke-width="3" rx="2"/>
+      <rect x="87" y="17" width="16" height="16" fill="#e50914" rx="1"/>
+      <!-- Bottom-left finder pattern -->
+      <rect x="10" y="80" width="30" height="30" fill="none" stroke="#e50914" stroke-width="3" rx="2"/>
+      <rect x="17" y="87" width="16" height="16" fill="#e50914" rx="1"/>
+      <!-- Data modules (random pattern) -->
+      <rect x="50" y="10" width="6" height="6" fill="white" rx="1"/>
+      <rect x="60" y="10" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="20" width="6" height="6" fill="white" rx="1"/>
+      <rect x="70" y="20" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="30" width="6" height="6" fill="white" rx="1"/>
+      <rect x="60" y="30" width="6" height="6" fill="white" rx="1"/>
+      <rect x="10" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="20" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="30" y="60" width="6" height="6" fill="white" rx="1"/>
+      <rect x="10" y="70" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="60" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="70" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="80" y="50" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="60" width="6" height="6" fill="white" rx="1"/>
+      <rect x="80" y="60" width="6" height="6" fill="white" rx="1"/>
+      <rect x="60" y="70" width="6" height="6" fill="white" rx="1"/>
+      <rect x="80" y="70" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="80" width="6" height="6" fill="white" rx="1"/>
+      <rect x="70" y="80" width="6" height="6" fill="white" rx="1"/>
+      <rect x="50" y="90" width="6" height="6" fill="white" rx="1"/>
+      <rect x="60" y="90" width="6" height="6" fill="white" rx="1"/>
+      <rect x="80" y="90" width="6" height="6" fill="white" rx="1"/>
+      <rect x="90" y="80" width="6" height="6" fill="white" rx="1"/>
+      <rect x="100" y="80" width="6" height="6" fill="white" rx="1"/>
+      <rect x="100" y="90" width="6" height="6" fill="white" rx="1"/>
+      <rect x="90" y="100" width="6" height="6" fill="white" rx="1"/>
+    </svg>
+    """)
+
+
+# ─── TICKET MODAL ─────────────────────────────────────────────────────────────
+
+def ticket_modal() -> rx.Component:
+    return rx.cond(
+        AppState.show_ticket,
+        rx.box(
+            # Overlay
+            rx.box(
+                on_click=AppState.close_ticket,
+                position="fixed",
+                top="0", left="0", right="0", bottom="0",
+                background="rgba(0,0,0,0.85)",
+                z_index="2000",
+                backdrop_filter="blur(6px)",
+            ),
+            # Ticket panel
+            rx.box(
+                rx.vstack(
+                    # Header del ticket
+                    rx.vstack(
+                        rx.hstack(
+                            rx.text("🎬", font_size="28px"),
+                            rx.vstack(
+                                rx.text("CINEMAX", color=RED_CINE, font_size="22px", font_weight="900", letter_spacing="4"),
+                                rx.text("ENTERTAINMENT", color=GRAY_MUTED, font_size="9px", letter_spacing="6"),
+                                spacing="0",
+                                align_items="start",
+                            ),
+                            spacing="3",
+                            align="center",
+                        ),
+                        rx.box(width="100%", height="2px",
+                               background=f"linear-gradient(90deg, transparent, {RED_CINE}, transparent)"),
+                        rx.text("✓ RESERVA CONFIRMADA", color="#00c07f", font_size="13px",
+                                font_weight="700", letter_spacing="2"),
+                        align_items="center",
+                        spacing="3",
+                        padding="1.5rem 1.5rem 1rem",
+                        background=f"linear-gradient(180deg, rgba(229,9,20,0.08) 0%, transparent 100%)",
+                        width="100%",
+                        border_radius="20px 20px 0 0",
+                    ),
+
+                    # Contenido del ticket
+                    rx.vstack(
+                        # Película
+                        rx.vstack(
+                            rx.text("PELÍCULA", color=GRAY_MUTED, font_size="10px",
+                                    font_weight="700", letter_spacing="3"),
+                            rx.text(AppState.ticket_movie, color=WHITE, font_size="18px",
+                                    font_weight="800", text_align="center"),
+                            align_items="center", spacing="1",
+                        ),
+
+                        # Separador punteado
+                        rx.box(
+                            width="100%", height="1px",
+                            background="repeating-linear-gradient(90deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 8px, transparent 8px, transparent 16px)",
+                            margin="0.5rem 0",
+                        ),
+
+                        # Info en grid
+                        rx.grid(
+                            # Sala
+                            rx.vstack(
+                                rx.text("SALA", color=GRAY_MUTED, font_size="10px",
+                                        font_weight="700", letter_spacing="2"),
+                                rx.text(AppState.ticket_hall, color=WHITE,
+                                        font_size="16px", font_weight="700"),
+                                align_items="center", spacing="1",
+                            ),
+                            # Horario
+                            rx.vstack(
+                                rx.text("HORARIO", color=GRAY_MUTED, font_size="10px",
+                                        font_weight="700", letter_spacing="2"),
+                                rx.text(AppState.ticket_showtime, color=WHITE,
+                                        font_size="16px", font_weight="700"),
+                                align_items="center", spacing="1",
+                            ),
+                            # Fecha
+                            rx.vstack(
+                                rx.text("FECHA", color=GRAY_MUTED, font_size="10px",
+                                        font_weight="700", letter_spacing="2"),
+                                rx.text(AppState.ticket_date, color=WHITE,
+                                        font_size="13px", font_weight="600"),
+                                align_items="center", spacing="1",
+                            ),
+                            columns="3",
+                            gap="1rem",
+                            width="100%",
+                        ),
+
+                        # Separador punteado
+                        rx.box(
+                            width="100%", height="1px",
+                            background="repeating-linear-gradient(90deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 8px, transparent 8px, transparent 16px)",
+                            margin="0.25rem 0",
+                        ),
+
+                        # Asientos
+                        rx.vstack(
+                            rx.text("ASIENTOS", color=GRAY_MUTED, font_size="10px",
+                                    font_weight="700", letter_spacing="3"),
+                            rx.box(
+                                rx.foreach(
+                                    AppState.ticket_seats,
+                                    lambda s: rx.box(
+                                        s,
+                                        background=RED_CINE,
+                                        color=WHITE,
+                                        font_size="12px",
+                                        font_weight="700",
+                                        padding="4px 10px",
+                                        border_radius="6px",
+                                    )
+                                ),
+                                display="flex",
+                                flex_wrap="wrap",
+                                gap="0.5rem",
+                                justify_content="center",
+                            ),
+                            align_items="center", spacing="2",
+                        ),
+
+                        # Separador punteado
+                        rx.box(
+                            width="100%", height="1px",
+                            background="repeating-linear-gradient(90deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 8px, transparent 8px, transparent 16px)",
+                            margin="0.25rem 0",
+                        ),
+
+                        # Total + QR
+                        rx.hstack(
+                            # Total
+                            rx.vstack(
+                                rx.text("TOTAL PAGADO", color=GRAY_MUTED, font_size="10px",
+                                        font_weight="700", letter_spacing="2"),
+                                rx.text("RD$ ", AppState.ticket_total, color=GOLD_VIP,
+                                        font_size="24px", font_weight="900"),
+                                align_items="start",
+                                spacing="1",
+                            ),
+                            rx.spacer(),
+                            # QR
+                            rx.vstack(
+                                qr_svg(),
+                                rx.text(AppState.ticket_code, color=GRAY_MUTED,
+                                        font_size="9px", font_weight="600",
+                                        letter_spacing="1", text_align="center"),
+                                align_items="center",
+                                spacing="1",
+                            ),
+                            width="100%",
+                            align="center",
+                        ),
+
+                        padding="1rem 1.5rem 1.5rem",
+                        spacing="4",
+                        width="100%",
+                    ),
+
+                    # Footer del ticket
+                    rx.vstack(
+                        rx.box(
+                            width="100%", height="1px",
+                            background="rgba(255,255,255,0.08)",
+                        ),
+                        rx.text(
+                            "Presenta este ticket en la entrada del cine. Válido solo para la función indicada.",
+                            color=GRAY_MUTED, font_size="11px", text_align="center",
+                            padding="0 1rem",
+                        ),
+                        rx.button(
+                            rx.hstack(rx.icon("check", size=16), rx.text("Cerrar"), spacing="2", align="center"),
+                            on_click=AppState.close_ticket,
+                            background=RED_CINE,
+                            color=WHITE,
+                            border="none",
+                            border_radius="10px",
+                            padding="12px 32px",
+                            font_size="14px",
+                            font_weight="700",
+                            cursor="pointer",
+                            width="100%",
+                            margin="0 1rem",
+                            _hover={"background": RED_HOVER},
+                        ),
+                        spacing="3",
+                        padding="1rem 1rem 1.5rem",
+                        align_items="center",
+                        width="100%",
+                        background="rgba(255,255,255,0.02)",
+                        border_radius="0 0 20px 20px",
+                    ),
+
+                    spacing="0",
+                    width="100%",
+                ),
+                position="fixed",
+                top="50%",
+                left="50%",
+                transform="translate(-50%, -50%)",
+                background=GRAY_DARK,
+                border="1px solid rgba(229,9,20,0.3)",
+                border_radius="20px",
+                width=["92vw", "440px"],
+                max_height="92vh",
+                overflow_y="auto",
+                z_index="2001",
+                box_shadow="0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(229,9,20,0.1)",
+            ),
+            position="fixed",
+            top="0", left="0", right="0", bottom="0",
+            z_index="1999",
+        ),
+        rx.box(),
+    )
+
+
 # ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 def reservas_page() -> rx.Component:
@@ -519,6 +804,35 @@ def reservas_page() -> rx.Component:
                         align_items="start",
                         spacing="2",
                         margin_bottom="0.5rem",
+                    ),
+
+                    # Info de la sala actual
+                    rx.cond(
+                        AppState.movie_loaded,
+                        rx.hstack(
+                            rx.icon("ticket", size=16, color=RED_CINE),
+                            rx.text(
+                                AppState.current_movie["nombre"],
+                                color=WHITE_MUTED,
+                                font_size="15px",
+                                font_weight="600",
+                            ),
+                            rx.text("•", color=GRAY_MUTED),
+                            rx.text(
+                                "Sala ",
+                                AppState.current_movie["id"],
+                                color=GRAY_MUTED,
+                                font_size="14px",
+                            ),
+                            spacing="2",
+                            align="center",
+                            padding="8px 16px",
+                            background="rgba(229,9,20,0.06)",
+                            border="1px solid rgba(229,9,20,0.2)",
+                            border_radius="8px",
+                            display="inline-flex",
+                        ),
+                        rx.box(),
                     ),
 
                     rx.flex(
@@ -576,6 +890,24 @@ def reservas_page() -> rx.Component:
                                         AppState.movie_loaded,
                                         AppState.current_movie["nombre"],
                                         "Sin seleccionar",
+                                    ),
+                                    color=WHITE, font_size="15px", font_weight="600",
+                                ),
+                                align_items="start", spacing="1",
+                                padding="1rem",
+                                background="rgba(255,255,255,0.03)",
+                                border_radius="10px",
+                                width="100%",
+                                border="1px solid rgba(255,255,255,0.06)",
+                            ),
+
+                            rx.vstack(
+                                rx.text("Sala", color=GRAY_MUTED, font_size="12px"),
+                                rx.text(
+                                    rx.cond(
+                                        AppState.movie_loaded,
+                                        rx.fragment("Sala ", AppState.current_movie["id"]),
+                                        "—",
                                     ),
                                     color=WHITE, font_size="15px", font_weight="600",
                                 ),
@@ -689,7 +1021,7 @@ def reservas_page() -> rx.Component:
                     ),
 
                     align_items="flex-start",
-                    spacing="8",
+                    spacing="5",
                     width="100%",
                 ),
 
@@ -705,6 +1037,7 @@ def reservas_page() -> rx.Component:
         footer(),
         toast(),
         payment_modal(),
+        ticket_modal(),
         font_family=FONT_BODY,
         background=BLACK_CINEMA,
     )

@@ -789,6 +789,150 @@ def ticket_modal() -> rx.Component:
     )
 
 
+
+# ─── AUTH REQUIRED MODAL ──────────────────────────────────────────────────────
+
+def auth_required_modal() -> rx.Component:
+    """Modal que se muestra cuando el usuario intenta reservar sin haber iniciado sesión."""
+    return rx.cond(
+        AppState.show_auth_required_modal,
+        rx.box(
+            # Overlay
+            rx.box(
+                on_click=AppState.close_auth_required_modal,
+                position="fixed",
+                top="0", left="0", right="0", bottom="0",
+                background="rgba(0,0,0,0.80)",
+                z_index="1200",
+                backdrop_filter="blur(6px)",
+            ),
+            # Modal panel
+            rx.box(
+                rx.vstack(
+                    # Ícono
+                    rx.box(
+                        rx.text("🔒", font_size="48px"),
+                        display="flex",
+                        justify_content="center",
+                        padding_bottom="0.5rem",
+                    ),
+                    # Título
+                    rx.text(
+                        "Inicia sesión para continuar",
+                        color=WHITE,
+                        font_size="22px",
+                        font_weight="800",
+                        text_align="center",
+                        font_family=FONT_HEADING,
+                    ),
+                    # Descripción
+                    rx.text(
+                        "Necesitas una cuenta para reservar tus boletos. ¡Es rápido y gratis!",
+                        color=GRAY_MUTED,
+                        font_size="14px",
+                        text_align="center",
+                        line_height="1.6",
+                        max_width="320px",
+                    ),
+                    rx.box(height="4px"),
+                    # Botones
+                    rx.vstack(
+                        rx.link(
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon("log-in", size=18),
+                                    rx.text("Iniciar sesión"),
+                                    spacing="2",
+                                    align="center",
+                                ),
+                                background=RED_CINE,
+                                color=WHITE,
+                                border="none",
+                                border_radius="10px",
+                                padding="14px",
+                                font_size="15px",
+                                font_weight="700",
+                                cursor="pointer",
+                                width="100%",
+                                transition="all 0.2s ease",
+                                _hover={
+                                    "background": RED_HOVER,
+                                    "transform": "translateY(-1px)",
+                                    "box_shadow": f"0 6px 20px rgba(229,9,20,0.4)",
+                                },
+                            ),
+                            href="/login",
+                            text_decoration="none",
+                            width="100%",
+                            on_click=AppState.close_auth_required_modal,
+                        ),
+                        rx.link(
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon("user-plus", size=18),
+                                    rx.text("Registrarte"),
+                                    spacing="2",
+                                    align="center",
+                                ),
+                                background="transparent",
+                                color=WHITE,
+                                border=f"2px solid {RED_CINE}",
+                                border_radius="10px",
+                                padding="14px",
+                                font_size="15px",
+                                font_weight="700",
+                                cursor="pointer",
+                                width="100%",
+                                transition="all 0.2s ease",
+                                _hover={
+                                    "background": "rgba(229,9,20,0.1)",
+                                    "transform": "translateY(-1px)",
+                                },
+                            ),
+                            href="/registro",
+                            text_decoration="none",
+                            width="100%",
+                            on_click=AppState.close_auth_required_modal,
+                        ),
+                        rx.button(
+                            "Cancelar",
+                            on_click=AppState.close_auth_required_modal,
+                            background="transparent",
+                            color=GRAY_MUTED,
+                            border="1px solid rgba(255,255,255,0.1)",
+                            border_radius="8px",
+                            padding="10px",
+                            font_size="13px",
+                            cursor="pointer",
+                            width="100%",
+                            _hover={"color": WHITE, "border_color": "rgba(255,255,255,0.3)"},
+                        ),
+                        spacing="3",
+                        width="100%",
+                    ),
+                    align_items="center",
+                    spacing="4",
+                    padding="2rem",
+                    width="100%",
+                ),
+                position="fixed",
+                top="50%",
+                left="50%",
+                transform="translate(-50%, -50%)",
+                background=GRAY_DARK,
+                border="1px solid rgba(229,9,20,0.3)",
+                border_radius="20px",
+                width=["90vw", "400px"],
+                z_index="1201",
+                box_shadow="0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(229,9,20,0.1)",
+            ),
+            position="fixed",
+            top="0", left="0", right="0", bottom="0",
+            z_index="1199",
+        ),
+        rx.box(),
+    )
+
 # ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 def reservas_page() -> rx.Component:
@@ -1038,6 +1182,7 @@ def reservas_page() -> rx.Component:
         toast(),
         payment_modal(),
         ticket_modal(),
+        auth_required_modal(),
         font_family=FONT_BODY,
         background=BLACK_CINEMA,
     )

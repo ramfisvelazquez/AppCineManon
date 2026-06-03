@@ -153,6 +153,9 @@ class AppState(rx.State):
     selected_showtime: str = ""
     _reserved_by_movie: Dict[str, List[str]] = {}
 
+    # ─── AUTH REQUIRED MODAL ──────────────────────────────────────────
+    show_auth_required_modal: bool = False
+
     @rx.var
     def reserved_seats(self) -> List[str]:
         movie_id = str(self.current_movie.get("id", ""))
@@ -267,6 +270,9 @@ class AppState(rx.State):
     # ─── FLUJO DE PAGO ────────────────────────────────────────────────
 
     def confirm_reservation(self):
+        if not self.is_logged_in:
+            self.show_auth_required_modal = True
+            return
         if not self.selected_seats:
             self.show_toast("Selecciona al menos un asiento", "error")
             return
@@ -275,6 +281,9 @@ class AppState(rx.State):
         self.selected_payment_method = ""
         self.payment_error = ""
         self._reset_payment_fields()
+
+    def close_auth_required_modal(self):
+        self.show_auth_required_modal = False
 
     def _reset_payment_fields(self):
         self.card_number = ""

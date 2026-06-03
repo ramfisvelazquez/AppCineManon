@@ -793,7 +793,6 @@ def ticket_modal() -> rx.Component:
 # ─── AUTH REQUIRED MODAL ──────────────────────────────────────────────────────
 
 def auth_required_modal() -> rx.Component:
-    """Modal que se muestra cuando el usuario intenta reservar sin haber iniciado sesión."""
     return rx.cond(
         AppState.show_auth_required_modal,
         rx.box(
@@ -858,13 +857,12 @@ def auth_required_modal() -> rx.Component:
                                 _hover={
                                     "background": RED_HOVER,
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": f"0 6px 20px rgba(229,9,20,0.4)",
+                                    "box_shadow": "0 6px 20px rgba(229,9,20,0.4)",
                                 },
                             ),
                             href="/login",
                             text_decoration="none",
                             width="100%",
-                            on_click=AppState.close_auth_required_modal,
                         ),
                         rx.link(
                             rx.button(
@@ -892,7 +890,6 @@ def auth_required_modal() -> rx.Component:
                             href="/registro",
                             text_decoration="none",
                             width="100%",
-                            on_click=AppState.close_auth_required_modal,
                         ),
                         rx.button(
                             "Cancelar",

@@ -155,6 +155,7 @@ class AppState(rx.State):
 
     # ─── AUTH REQUIRED MODAL ──────────────────────────────────────────
     show_auth_required_modal: bool = False
+    redirect_after_login: str = "/"
 
     @rx.var
     def reserved_seats(self) -> List[str]:
@@ -271,6 +272,7 @@ class AppState(rx.State):
 
     def confirm_reservation(self):
         if not self.is_logged_in:
+            self.redirect_after_login = self.router.page.path
             self.show_auth_required_modal = True
             return
         if not self.selected_seats:
@@ -284,6 +286,7 @@ class AppState(rx.State):
 
     def close_auth_required_modal(self):
         self.show_auth_required_modal = False
+        self.redirect_after_login = "/"
 
     def _reset_payment_fields(self):
         self.card_number = ""
@@ -439,7 +442,9 @@ class AppState(rx.State):
         self.user_name = self.login_email.split("@")[0].title()
         self.auth_error = ""
         self.show_toast(f"¡Bienvenido, {self.user_name}! 🎬", "success")
-        return rx.redirect("/")
+        destination = self.redirect_after_login if self.redirect_after_login else "/"
+        self.redirect_after_login = "/"
+        return rx.redirect(destination)
 
     def handle_register(self):
         if not all([self.register_name, self.register_email,
@@ -453,7 +458,9 @@ class AppState(rx.State):
         self.user_name = self.register_name
         self.auth_error = ""
         self.show_toast(f"¡Cuenta creada! Bienvenido, {self.register_name} 🎬", "success")
-        return rx.redirect("/")
+        destination = self.redirect_after_login if self.redirect_after_login else "/"
+        self.redirect_after_login = "/"
+        return rx.redirect(destination)
 
     def handle_logout(self):
         self.is_logged_in = False

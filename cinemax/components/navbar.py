@@ -1,6 +1,6 @@
 """
 components/navbar.py
-Navbar premium estilo Netflix.
+Navbar premium estilo Netflix — con enlace "Mis Reservas" para usuarios autenticados.
 """
 
 import reflex as rx
@@ -42,8 +42,30 @@ def navbar() -> rx.Component:
                 nav_link("Cartelera", "/catalogo"),
                 nav_link("VIP", "/#vip"),
                 nav_link("Promociones", "/#promo"),
+                # "Mis Reservas" solo visible cuando está autenticado
+                rx.cond(
+                    AppState.is_logged_in,
+                    rx.link(
+                        rx.hstack(
+                            rx.icon("ticket", size=14),
+                            rx.text("Mis Reservas"),
+                            spacing="1",
+                            align="center",
+                        ),
+                        href="/mis-reservas",
+                        color=GOLD_VIP,
+                        font_size="14px",
+                        font_weight="600",
+                        text_decoration="none",
+                        padding="6px 0",
+                        transition="color 0.2s ease",
+                        _hover={"color": WHITE},
+                    ),
+                    rx.box(),  # nada si no está autenticado
+                ),
                 spacing="6",
                 display=["none", "none", "flex"],
+                align="center",
             ),
 
             # Auth
@@ -131,13 +153,61 @@ def navbar() -> rx.Component:
                     rx.link("Inicio", href="/", color=WHITE_SOFT, text_decoration="none", font_size="16px", padding="8px 0", width="100%"),
                     rx.link("Cartelera", href="/catalogo", color=WHITE_SOFT, text_decoration="none", font_size="16px", padding="8px 0", width="100%"),
                     rx.link("VIP", href="/#vip", color=WHITE_SOFT, text_decoration="none", font_size="16px", padding="8px 0", width="100%"),
+                    # Mis Reservas en móvil — solo autenticados
+                    rx.cond(
+                        AppState.is_logged_in,
+                        rx.link(
+                            rx.hstack(
+                                rx.icon("ticket", size=16, color=GOLD_VIP),
+                                rx.text("Mis Reservas", color=GOLD_VIP, font_weight="600"),
+                                spacing="2", align="center",
+                            ),
+                            href="/mis-reservas",
+                            text_decoration="none",
+                            font_size="16px",
+                            padding="8px 0",
+                            width="100%",
+                        ),
+                        rx.box(),
+                    ),
                     rx.divider(border_color="rgba(255,255,255,0.1)"),
-                    rx.link("Iniciar sesión", href="/login", color=WHITE_SOFT, text_decoration="none", font_size="16px", padding="8px 0", width="100%"),
-                    rx.link(
-                        rx.box("Registrarse", background=RED_CINE, color=WHITE, border_radius="8px", padding="10px 0", text_align="center", width="100%"),
-                        href="/registro",
-                        text_decoration="none",
-                        width="100%",
+                    # Auth links móvil
+                    rx.cond(
+                        AppState.is_logged_in,
+                        rx.vstack(
+                            rx.text(
+                                "👤 ", AppState.user_name,
+                                color=WHITE_SOFT, font_size="15px", padding="8px 0",
+                            ),
+                            rx.button(
+                                "Cerrar sesión",
+                                on_click=AppState.handle_logout,
+                                background="transparent",
+                                color=WHITE_MUTED,
+                                border="1px solid rgba(255,255,255,0.2)",
+                                border_radius="8px",
+                                padding="10px 0",
+                                font_size="15px",
+                                cursor="pointer",
+                                width="100%",
+                                _hover={"color": WHITE},
+                            ),
+                            align_items="start",
+                            spacing="1",
+                            width="100%",
+                        ),
+                        rx.vstack(
+                            rx.link("Iniciar sesión", href="/login", color=WHITE_SOFT, text_decoration="none", font_size="16px", padding="8px 0", width="100%"),
+                            rx.link(
+                                rx.box("Registrarse", background=RED_CINE, color=WHITE, border_radius="8px", padding="10px 0", text_align="center", width="100%"),
+                                href="/registro",
+                                text_decoration="none",
+                                width="100%",
+                            ),
+                            align_items="start",
+                            spacing="2",
+                            width="100%",
+                        ),
                     ),
                     spacing="0",
                     align_items="start",

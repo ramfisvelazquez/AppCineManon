@@ -144,7 +144,7 @@ def payment_step_select() -> rx.Component:
             payment_method_card("💳", "Tarjeta de Crédito/Débito", "Visa, Mastercard, AMEX", "card", "229, 9, 20"),
             payment_method_card("📱", "MobilePay", "Paga desde tu billetera digital", "wallet", "245, 197, 24"),
             payment_method_card("🏦", "CineTransfer", "Transferencia bancaria instantánea", "transfer", "0, 180, 120"),
-            payment_method_card("💵", "CineCredits", "Usa tu saldo de la cuenta Cinemax", "credits", "100, 100, 255"),
+            payment_method_card("💵", "CineCredits", "Usa tu saldo de la cuenta KankyCine", "credits", "100, 100, 255"),
             spacing="3",
             width="100%",
         ),
@@ -270,10 +270,10 @@ def payment_form_transfer() -> rx.Component:
         pay_input("Número de cuenta / RNC *", "000-000000-0", AppState.transfer_account, AppState.set_transfer_account),
         rx.box(
             rx.vstack(
-                rx.text("Cuenta destino CineMax:", color=WHITE_MUTED, font_size="12px", font_weight="700"),
+                rx.text("Cuenta destino KankyCine:", color=WHITE_MUTED, font_size="12px", font_weight="700"),
                 rx.text("Banco: CineBank Nacional", color=GRAY_MUTED, font_size="12px"),
                 rx.text("Cuenta: 001-234567-8 (CTA. CTE)", color=GRAY_MUTED, font_size="12px"),
-                rx.text("Titular: Cinemax Entertainment S.A.", color=GRAY_MUTED, font_size="12px"),
+                rx.text("Titular: KankyCine Entertainment S.A.", color=GRAY_MUTED, font_size="12px"),
                 align_items="start",
                 spacing="1",
             ),
@@ -467,7 +467,7 @@ def payment_modal() -> rx.Component:
                     rx.hstack(
                         rx.vstack(
                             rx.text("MÉTODO DE PAGO", color=GRAY_MUTED, font_size="11px", font_weight="700", letter_spacing="2"),
-                            rx.text("Cinemax Checkout", color=WHITE, font_size="18px", font_weight="800"),
+                            rx.text("KankyCine Checkout", color=WHITE, font_size="18px", font_weight="800"),
                             align_items="start",
                             spacing="0",
                         ),
@@ -593,7 +593,7 @@ def ticket_modal() -> rx.Component:
                         rx.hstack(
                             rx.text("🎬", font_size="28px"),
                             rx.vstack(
-                                rx.text("CINEMAX", color=RED_CINE, font_size="22px", font_weight="900", letter_spacing="4"),
+                                rx.text("KANKYCINE", color=RED_CINE, font_size="22px", font_weight="900", letter_spacing="4"),
                                 rx.text("ENTERTAINMENT", color=GRAY_MUTED, font_size="9px", letter_spacing="6"),
                                 spacing="0",
                                 align_items="start",

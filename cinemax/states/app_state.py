@@ -1,12 +1,13 @@
 """
 states/app_state.py
-Estado global de la aplicación Cinemax.
+Estado global de la aplicación Cinemax — con validación en tiempo real.
 """
 
 import reflex as rx
 from typing import Dict, Any, List
 import random
 import string
+import re
 
 import sys
 import os
@@ -18,14 +19,12 @@ from cinemax.utils.movie_loader import (
 )
 
 
-def _generate_qr_code() -> str:
-    """Genera un código QR falso (texto en base64 de un SVG simple)."""
+def _generate_booking_code() -> str:
     chars = string.ascii_uppercase + string.digits
-    code = "CX-" + "".join(random.choices(chars, k=12))
-    return code
+    return "CX-" + "".join(random.choices(chars, k=12))
 
 
-# Asientos pre-ocupados por sala (movie_id -> lista de asientos)
+# Asientos pre-ocupados por sala (movie_id -> lista)
 _DEFAULT_OCCUPIED: Dict[str, List[str]] = {
     "1": ["A2", "A5", "B3", "B7", "C1", "C4", "C8", "D2", "D6"],
     "2": ["B1", "B5", "C3", "C7", "D4", "E2", "E6"],
@@ -36,6 +35,97 @@ _DEFAULT_OCCUPIED: Dict[str, List[str]] = {
     "7": ["A3", "A8", "B5", "C1", "C6", "D3", "E2", "E9"],
     "8": ["A6", "B3", "B8", "C5", "D1", "D7", "E4", "E8"],
 }
+
+
+# ─── HELPERS DE FORMATO ───────────────────────────────────────────────────────
+
+def _format_card_number(raw: str) -> str:
+    """1234567890123456 → 1234 5678 9012 3456 (máx 19 chars con espacios)."""
+    digits = re.sub(r"\D", "", raw)[:16]
+    return " ".join(digits[i:i+4] for i in range(0, len(digits), 4))
+
+
+def _format_expiry(raw: str) -> str:
+    """1005 → 10/05 (máx 5 chars)."""
+    digits = re.sub(r"\D", "", raw)[:4]
+    if len(digits) > 2:
+        return digits[:2] + "/" + digits[2:]
+    return digits
+
+
+def _format_phone(raw: str) -> str:
+    """8095551234 → (809) 555-1234 (máx 10 dígitos)."""
+    digits = re.sub(r"\D", "", raw)[:10]
+    if len(digits) > 6:
+        return f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+    if len(digits) > 3:
+        return f"({digits[:3]}) {digits[3:]}"
+    if len(digits) > 0:
+        return f"({digits}"
+    return ""
+
+
+# ─── HELPERS DE VALIDACIÓN ────────────────────────────────────────────────────
+
+def _validate_card_number(v: str) -> str:
+    digits = re.sub(r"\D", "", v)
+    if not digits:
+        return "Número de tarjeta requerido"
+    if len(digits) < 16:
+        return f"Número incompleto ({len(digits)}/16 dígitos)"
+    return ""
+
+
+def _validate_card_holder(v: str) -> str:
+    if not v.strip():
+        return "Nombre del titular requerido"
+    if len(v.strip()) < 3:
+        return "Nombre demasiado corto"
+    return ""
+
+
+def _validate_expiry(v: str) -> str:
+    digits = re.sub(r"\D", "", v)
+    if not digits:
+        return "Fecha de vencimiento requerida"
+    if len(digits) < 4:
+        return "Formato requerido: MM/AA"
+    month = int(digits[:2])
+    if month < 1 or month > 12:
+        return "Mes inválido (01–12)"
+    return ""
+
+
+def _validate_cvv(v: str) -> str:
+    digits = re.sub(r"\D", "", v)
+    if not digits:
+        return "CVV requerido"
+    if len(digits) < 3:
+        return "El CVV debe tener entre 3 y 4 dígitos"
+    return ""
+
+
+def _validate_phone(v: str) -> str:
+    digits = re.sub(r"\D", "", v)
+    if not digits:
+        return "Número de teléfono requerido"
+    if len(digits) < 10:
+        return "Número de teléfono incompleto"
+    return ""
+
+
+def _validate_bank(v: str) -> str:
+    if not v.strip():
+        return "Banco de origen requerido"
+    return ""
+
+
+def _validate_account(v: str) -> str:
+    if not v.strip():
+        return "Número de cuenta requerido"
+    if len(v.strip()) < 5:
+        return "Número de cuenta inválido"
+    return ""
 
 
 class AppState(rx.State):
@@ -61,37 +151,44 @@ class AppState(rx.State):
     # ─── RESERVAS ─────────────────────────────────────────────────────
     selected_seats: List[str] = []
     selected_showtime: str = ""
-    # reserved_seats ahora es por sala (movie_id): se almacena como JSON string
-    # para simplificar: guardamos un dict str->List[str] serializado
     _reserved_by_movie: Dict[str, List[str]] = {}
 
     @rx.var
     def reserved_seats(self) -> List[str]:
-        """Retorna los asientos ocupados para la película actual."""
         movie_id = str(self.current_movie.get("id", ""))
         if not movie_id:
             return []
-        # Combinar pre-ocupados con reservas hechas en sesión
         pre = _DEFAULT_OCCUPIED.get(movie_id, [])
         session = self._reserved_by_movie.get(movie_id, [])
-        combined = list(set(pre + session))
-        return combined
+        return list(set(pre + session))
 
     # ─── PAGO ─────────────────────────────────────────────────────────
     show_payment_modal: bool = False
     selected_payment_method: str = ""
-    payment_step: str = "select"   # "select" | "form" | "processing" | "done"
+    payment_step: str = "select"
     payment_error: str = ""
-    # Campos tarjeta
+
+    # Tarjeta — valor formateado mostrado al usuario
     card_number: str = ""
     card_holder: str = ""
     card_expiry: str = ""
     card_cvv: str = ""
-    # Campos billetera virtual
+
+    # Errores por campo (tiempo real)
+    err_card_number: str = ""
+    err_card_holder: str = ""
+    err_card_expiry: str = ""
+    err_card_cvv: str = ""
+
+    # MobilePay
     wallet_phone: str = ""
-    # Campos transferencia
+    err_wallet_phone: str = ""
+
+    # CineTransfer
     transfer_bank: str = ""
     transfer_account: str = ""
+    err_transfer_bank: str = ""
+    err_transfer_account: str = ""
 
     # ─── TICKET ───────────────────────────────────────────────────────
     show_ticket: bool = False
@@ -114,26 +211,27 @@ class AppState(rx.State):
     register_confirm: str = ""
     auth_error: str = ""
 
+    # ─── LIFECYCLE ────────────────────────────────────────────────────
+
     def on_load(self):
-        """Carga inicial de películas y categorías."""
         self.movies = load_movies()
         self.filtered_movies = self.movies
         self.categories = get_categories()
 
     def load_movie(self):
-        """Carga una película específica desde los parámetros de ruta."""
         movie_id = self.router.page.params.get("movie_id", "")
         self.current_movie = get_movie_by_id(movie_id) or {}
         if self.current_movie:
-            raw_horarios = self.current_movie.get("horarios", [])
-            self.horarios = [str(h) for h in raw_horarios]
+            raw = self.current_movie.get("horarios", [])
+            self.horarios = [str(h) for h in raw]
             if self.horarios:
                 self.selected_showtime = self.horarios[0]
         else:
             self.horarios = []
             self.selected_showtime = ""
-        # Limpiar asientos seleccionados al cambiar de película
         self.selected_seats = []
+
+    # ─── BÚSQUEDA ─────────────────────────────────────────────────────
 
     def set_search(self, query: str):
         self.search_query = query
@@ -153,6 +251,8 @@ class AppState(rx.State):
             results = [m for m in results if m.get("categoria") == self.active_category]
         self.filtered_movies = sort_movies(results, self.sort_by)
 
+    # ─── ASIENTOS ─────────────────────────────────────────────────────
+
     def toggle_seat(self, seat_id: str):
         if seat_id in self.reserved_seats:
             return
@@ -164,8 +264,9 @@ class AppState(rx.State):
     def clear_seats(self):
         self.selected_seats = []
 
+    # ─── FLUJO DE PAGO ────────────────────────────────────────────────
+
     def confirm_reservation(self):
-        """Abre el modal de pago."""
         if not self.selected_seats:
             self.show_toast("Selecciona al menos un asiento", "error")
             return
@@ -183,6 +284,13 @@ class AppState(rx.State):
         self.wallet_phone = ""
         self.transfer_bank = ""
         self.transfer_account = ""
+        self.err_card_number = ""
+        self.err_card_holder = ""
+        self.err_card_expiry = ""
+        self.err_card_cvv = ""
+        self.err_wallet_phone = ""
+        self.err_transfer_bank = ""
+        self.err_transfer_account = ""
         self.payment_error = ""
 
     def close_payment_modal(self):
@@ -201,39 +309,72 @@ class AppState(rx.State):
         self.selected_payment_method = ""
         self._reset_payment_fields()
 
+    # ─── SETTERS CON FORMATO + VALIDACIÓN EN TIEMPO REAL ─────────────
+
+    def set_card_number(self, val: str):
+        self.card_number = _format_card_number(val)
+        self.err_card_number = _validate_card_number(self.card_number)
+
+    def set_card_holder(self, val: str):
+        # Solo letras, espacios, apóstrofos y guiones (nombres)
+        cleaned = re.sub(r"[^A-Za-záéíóúüñÁÉÍÓÚÜÑ\s'\-]", "", val)
+        self.card_holder = cleaned
+        self.err_card_holder = _validate_card_holder(self.card_holder)
+
+    def set_card_expiry(self, val: str):
+        self.card_expiry = _format_expiry(val)
+        self.err_card_expiry = _validate_expiry(self.card_expiry)
+
+    def set_card_cvv(self, val: str):
+        digits = re.sub(r"\D", "", val)[:4]
+        self.card_cvv = digits
+        self.err_card_cvv = _validate_cvv(self.card_cvv)
+
+    def set_wallet_phone(self, val: str):
+        self.wallet_phone = _format_phone(val)
+        self.err_wallet_phone = _validate_phone(self.wallet_phone)
+
+    def set_transfer_bank(self, val: str):
+        self.transfer_bank = val
+        self.err_transfer_bank = _validate_bank(self.transfer_bank)
+
+    def set_transfer_account(self, val: str):
+        # Solo dígitos, guiones y espacios para números de cuenta
+        cleaned = re.sub(r"[^\d\-\s]", "", val)
+        self.transfer_account = cleaned
+        self.err_transfer_account = _validate_account(self.transfer_account)
+
+    # ─── PROCESAR PAGO (con validación final) ─────────────────────────
+
     def process_payment(self):
-        """Valida el formulario antes de procesar."""
+        """Valida todos los campos del método activo y avanza si todo está OK."""
         self.payment_error = ""
         method = self.selected_payment_method
 
         if method == "card":
-            if not self.card_number.strip():
-                self.payment_error = "Por favor ingresa el número de tarjeta"
-                return
-            if not self.card_holder.strip():
-                self.payment_error = "Por favor ingresa el nombre del titular"
-                return
-            if not self.card_expiry.strip():
-                self.payment_error = "Por favor ingresa la fecha de vencimiento"
-                return
-            if not self.card_cvv.strip():
-                self.payment_error = "Por favor ingresa el CVV"
+            self.err_card_number = _validate_card_number(self.card_number)
+            self.err_card_holder = _validate_card_holder(self.card_holder)
+            self.err_card_expiry = _validate_expiry(self.card_expiry)
+            self.err_card_cvv = _validate_cvv(self.card_cvv)
+            if any([self.err_card_number, self.err_card_holder,
+                    self.err_card_expiry, self.err_card_cvv]):
+                self.payment_error = "Por favor corrige los campos marcados"
                 return
 
         elif method == "wallet":
-            if not self.wallet_phone.strip():
-                self.payment_error = "Por favor ingresa tu número de teléfono"
+            self.err_wallet_phone = _validate_phone(self.wallet_phone)
+            if self.err_wallet_phone:
+                self.payment_error = self.err_wallet_phone
                 return
 
         elif method == "transfer":
-            if not self.transfer_bank.strip():
-                self.payment_error = "Por favor ingresa el banco de origen"
-                return
-            if not self.transfer_account.strip():
-                self.payment_error = "Por favor ingresa el número de cuenta"
+            self.err_transfer_bank = _validate_bank(self.transfer_bank)
+            self.err_transfer_account = _validate_account(self.transfer_account)
+            if any([self.err_transfer_bank, self.err_transfer_account]):
+                self.payment_error = "Por favor corrige los campos marcados"
                 return
 
-        # Todo OK → avanzar
+        # Todo OK → procesando
         self.payment_step = "processing"
 
     def finalize_payment(self):
@@ -241,8 +382,6 @@ class AppState(rx.State):
         import datetime
 
         movie_id = str(self.current_movie.get("id", ""))
-
-        # Añadir asientos reservados a la sala correcta
         if movie_id:
             current = self._reserved_by_movie.get(movie_id, [])
             updated = list(set(current + self.selected_seats))
@@ -250,8 +389,7 @@ class AppState(rx.State):
             new_map[movie_id] = updated
             self._reserved_by_movie = new_map
 
-        # Generar ticket
-        self.ticket_code = _generate_qr_code()
+        self.ticket_code = _generate_booking_code()
         self.ticket_seats = list(self.selected_seats)
         self.ticket_showtime = self.selected_showtime
         self.ticket_movie = self.current_movie.get("nombre", "")
@@ -259,33 +397,24 @@ class AppState(rx.State):
         self.ticket_total = self.total_price
         self.ticket_date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        # Limpiar selección
         self.selected_seats = []
         self.show_payment_modal = False
         self.payment_step = "select"
         self.selected_payment_method = ""
         self._reset_payment_fields()
-
-        # Mostrar ticket
         self.show_ticket = True
 
     def close_ticket(self):
         self.show_ticket = False
 
-    # ─── SETTERS PAGO ────────────────────────────────────────────────
-    def set_card_number(self, val: str): self.card_number = val
-    def set_card_holder(self, val: str): self.card_holder = val
-    def set_card_expiry(self, val: str): self.card_expiry = val
-    def set_card_cvv(self, val: str): self.card_cvv = val
-    def set_wallet_phone(self, val: str): self.wallet_phone = val
-    def set_transfer_bank(self, val: str): self.transfer_bank = val
-    def set_transfer_account(self, val: str): self.transfer_account = val
+    # ─── HORARIOS ─────────────────────────────────────────────────────
 
     def set_showtime(self, time: str):
         self.selected_showtime = time
         self.selected_seats = []
 
-    # ─── AUTH HANDLERS ────────────────────────────────────────────────
+    # ─── AUTH ─────────────────────────────────────────────────────────
+
     def set_login_email(self, val: str): self.login_email = val
     def set_login_password(self, val: str): self.login_password = val
     def set_register_name(self, val: str): self.register_name = val
@@ -323,6 +452,7 @@ class AppState(rx.State):
         self.show_toast("Sesión cerrada", "info")
 
     # ─── TOAST ────────────────────────────────────────────────────────
+
     def show_toast(self, message: str, type_: str = "success"):
         self.toast_message = message
         self.toast_type = type_
@@ -333,6 +463,8 @@ class AppState(rx.State):
 
     def toggle_mobile_menu(self):
         self.mobile_menu_open = not self.mobile_menu_open
+
+    # ─── VARS COMPUTADAS ──────────────────────────────────────────────
 
     @rx.var
     def total_price(self) -> float:
@@ -346,3 +478,37 @@ class AppState(rx.State):
     @rx.var
     def movie_loaded(self) -> bool:
         return len(self.current_movie) > 0
+
+    @rx.var
+    def card_form_valid(self) -> bool:
+        """True si todos los campos de tarjeta están llenos y sin errores."""
+        return bool(
+            self.card_number and not self.err_card_number and
+            self.card_holder and not self.err_card_holder and
+            self.card_expiry and not self.err_card_expiry and
+            self.card_cvv and not self.err_card_cvv
+        )
+
+    @rx.var
+    def wallet_form_valid(self) -> bool:
+        return bool(self.wallet_phone and not self.err_wallet_phone)
+
+    @rx.var
+    def transfer_form_valid(self) -> bool:
+        return bool(
+            self.transfer_bank and not self.err_transfer_bank and
+            self.transfer_account and not self.err_transfer_account
+        )
+
+    @rx.var
+    def current_form_valid(self) -> bool:
+        m = self.selected_payment_method
+        if m == "card":
+            return self.card_form_valid
+        if m == "wallet":
+            return self.wallet_form_valid
+        if m == "transfer":
+            return self.transfer_form_valid
+        if m == "credits":
+            return True
+        return False

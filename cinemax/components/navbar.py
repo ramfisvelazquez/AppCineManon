@@ -28,8 +28,8 @@ def navbar() -> rx.Component:
             # Logo
             rx.link(
                 rx.hstack(
-                    rx.text("C", color=RED_CINE, font_size="1.6rem", font_family=FONT_HEADING, display="inline"),
-                    rx.text("INEMAX", color=WHITE, font_size="1.6rem", font_family=FONT_HEADING, display="inline"),
+                    rx.text("K", color=RED_CINE, font_size="1.6rem", font_family=FONT_HEADING, display="inline"),
+                    rx.text("ANKYCINE", color=WHITE, font_size="1.6rem", font_family=FONT_HEADING, display="inline"),
                     spacing="0",
                 ),
                 href="/",

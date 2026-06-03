@@ -44,6 +44,21 @@ class AppState(rx.State):
         "D2", "D6", "E3", "E5", "E9"
     ]
 
+    # ─── PAGO ─────────────────────────────────────────────────────────
+    show_payment_modal: bool = False
+    selected_payment_method: str = ""
+    payment_step: str = "select"   # "select" | "form" | "processing" | "done"
+    # Campos tarjeta
+    card_number: str = ""
+    card_holder: str = ""
+    card_expiry: str = ""
+    card_cvv: str = ""
+    # Campos billetera virtual
+    wallet_phone: str = ""
+    # Campos transferencia
+    transfer_bank: str = ""
+    transfer_account: str = ""
+
     # ─── AUTH ─────────────────────────────────────────────────────────
     is_logged_in: bool = False
     user_name: str = ""
@@ -104,12 +119,61 @@ class AppState(rx.State):
         self.selected_seats = []
 
     def confirm_reservation(self):
+        """Abre el modal de pago en lugar de confirmar directamente."""
         if not self.selected_seats:
             self.show_toast("Selecciona al menos un asiento", "error")
             return
+        self.show_payment_modal = True
+        self.payment_step = "select"
+        self.selected_payment_method = ""
+        self._reset_payment_fields()
+
+    def _reset_payment_fields(self):
+        self.card_number = ""
+        self.card_holder = ""
+        self.card_expiry = ""
+        self.card_cvv = ""
+        self.wallet_phone = ""
+        self.transfer_bank = ""
+        self.transfer_account = ""
+
+    def close_payment_modal(self):
+        self.show_payment_modal = False
+        self.payment_step = "select"
+        self.selected_payment_method = ""
+        self._reset_payment_fields()
+
+    def select_payment_method(self, method: str):
+        self.selected_payment_method = method
+        self.payment_step = "form"
+
+    def go_back_to_methods(self):
+        self.payment_step = "select"
+        self.selected_payment_method = ""
+        self._reset_payment_fields()
+
+    def process_payment(self):
+        """Simula el procesamiento del pago."""
+        self.payment_step = "processing"
+
+    def finalize_payment(self):
+        """Finaliza la reserva tras el pago simulado."""
         self.reserved_seats = self.reserved_seats + self.selected_seats
         self.selected_seats = []
-        self.show_toast("¡Reserva confirmada! Disfruta la función 🎬", "success")
+        self.show_payment_modal = False
+        self.payment_step = "select"
+        self.selected_payment_method = ""
+        self._reset_payment_fields()
+        self.show_toast("¡Pago exitoso! Disfruta la función 🎬", "success")
+
+    # ─── SETTERS PAGO ────────────────────────────────────────────────
+    def set_card_number(self, val: str): self.card_number = val
+    def set_card_holder(self, val: str): self.card_holder = val
+    def set_card_expiry(self, val: str): self.card_expiry = val
+    def set_card_cvv(self, val: str): self.card_cvv = val
+    def set_wallet_phone(self, val: str): self.wallet_phone = val
+    def set_transfer_bank(self, val: str): self.transfer_bank = val
+    def set_transfer_account(self, val: str): self.transfer_account = val
 
     def set_showtime(self, time: str):
         self.selected_showtime = time

@@ -1,6 +1,6 @@
 """
 pages/reservas.py
-Sistema visual de selección de asientos.
+Sistema visual de selección de asientos con modal de pago.
 """
 
 import reflex as rx
@@ -62,6 +62,449 @@ def seat_row(row: str) -> rx.Component:
         align="center",
     )
 
+
+# ─── PAYMENT METHOD CARD ──────────────────────────────────────────────────────
+
+def payment_method_card(icon: str, title: str, subtitle: str, method_id: str, color: str) -> rx.Component:
+    is_selected = AppState.selected_payment_method == method_id
+    return rx.box(
+        rx.hstack(
+            rx.box(
+                rx.text(icon, font_size="28px"),
+                width="52px",
+                height="52px",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                background=f"rgba({color}, 0.12)",
+                border_radius="12px",
+                flex_shrink="0",
+            ),
+            rx.vstack(
+                rx.text(title, color=WHITE, font_size="15px", font_weight="700"),
+                rx.text(subtitle, color=GRAY_MUTED, font_size="12px"),
+                align_items="start",
+                spacing="1",
+                flex="1",
+            ),
+            rx.cond(
+                is_selected,
+                rx.box(
+                    rx.icon("check", size=16, color=WHITE),
+                    width="28px",
+                    height="28px",
+                    background=RED_CINE,
+                    border_radius="50%",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                ),
+                rx.box(
+                    width="28px",
+                    height="28px",
+                    border=f"2px solid rgba(255,255,255,0.15)",
+                    border_radius="50%",
+                ),
+            ),
+            spacing="3",
+            align="center",
+            width="100%",
+        ),
+        on_click=AppState.select_payment_method(method_id),
+        padding="1rem 1.2rem",
+        background=rx.cond(
+            is_selected,
+            f"rgba(229,9,20,0.08)",
+            "rgba(255,255,255,0.03)",
+        ),
+        border=rx.cond(
+            is_selected,
+            f"1px solid {RED_CINE}",
+            "1px solid rgba(255,255,255,0.08)",
+        ),
+        border_radius="12px",
+        cursor="pointer",
+        transition="all 0.2s ease",
+        width="100%",
+        _hover={"background": "rgba(255,255,255,0.06)", "border_color": "rgba(255,255,255,0.2)"},
+    )
+
+
+# ─── STEP 1: SELECT METHOD ─────────────────────────────────────────────────────
+
+def payment_step_select() -> rx.Component:
+    return rx.vstack(
+        rx.vstack(
+            rx.text("Elige tu método de pago", color=WHITE, font_size="20px", font_weight="700"),
+            rx.text("Selecciona cómo deseas pagar tu reserva", color=GRAY_MUTED, font_size="13px"),
+            align_items="start",
+            spacing="1",
+        ),
+
+        rx.vstack(
+            payment_method_card("💳", "Tarjeta de Crédito/Débito", "Visa, Mastercard, AMEX", "card", "229, 9, 20"),
+            payment_method_card("📱", "MobilePay", "Paga desde tu billetera digital", "wallet", "245, 197, 24"),
+            payment_method_card("🏦", "CineTransfer", "Transferencia bancaria instantánea", "transfer", "0, 180, 120"),
+            payment_method_card("💵", "CineCredits", "Usa tu saldo de la cuenta Cinemax", "credits", "100, 100, 255"),
+            spacing="3",
+            width="100%",
+        ),
+
+        rx.button(
+            rx.hstack(rx.text("Continuar"), rx.icon("arrow-right", size=16), spacing="2", align="center"),
+            on_click=rx.cond(
+                AppState.selected_payment_method != "",
+                AppState.select_payment_method(AppState.selected_payment_method),
+                rx.noop(),
+            ),
+            background=rx.cond(
+                AppState.selected_payment_method != "",
+                RED_CINE,
+                "rgba(255,255,255,0.08)",
+            ),
+            color=rx.cond(
+                AppState.selected_payment_method != "",
+                WHITE,
+                WHITE_MUTED,
+            ),
+            border="none",
+            border_radius="10px",
+            padding="14px",
+            font_size="15px",
+            font_weight="700",
+            cursor=rx.cond(
+                AppState.selected_payment_method != "",
+                "pointer",
+                "not-allowed",
+            ),
+            width="100%",
+        ),
+
+        spacing="5",
+        width="100%",
+    )
+
+
+# ─── INPUT HELPER ─────────────────────────────────────────────────────────────
+
+def pay_input(label: str, placeholder: str, value, on_change, input_type: str = "text") -> rx.Component:
+    return rx.vstack(
+        rx.text(label, color=WHITE_MUTED, font_size="12px", font_weight="600"),
+        rx.input(
+            placeholder=placeholder,
+            value=value,
+            on_change=on_change,
+            type=input_type,
+            background=GRAY_MID,
+            border=f"1px solid rgba(255,255,255,0.1)",
+            border_radius="8px",
+            color=WHITE,
+            padding="10px 14px",
+            font_size="14px",
+            width="100%",
+            _focus={"border_color": RED_CINE, "outline": "none", "box_shadow": f"0 0 0 2px rgba(229,9,20,0.25)"},
+            _placeholder={"color": GRAY_MUTED},
+        ),
+        align_items="start",
+        spacing="1",
+        width="100%",
+    )
+
+
+# ─── STEP 2: FORM (per method) ────────────────────────────────────────────────
+
+def payment_form_card() -> rx.Component:
+    return rx.vstack(
+        rx.text("💳 Datos de la Tarjeta", color=WHITE, font_size="16px", font_weight="700"),
+        pay_input("Número de tarjeta", "1234 5678 9012 3456", AppState.card_number, AppState.set_card_number),
+        pay_input("Nombre del titular", "Como aparece en la tarjeta", AppState.card_holder, AppState.set_card_holder),
+        rx.hstack(
+            pay_input("Vencimiento", "MM/AA", AppState.card_expiry, AppState.set_card_expiry),
+            pay_input("CVV", "•••", AppState.card_cvv, AppState.set_card_cvv),
+            spacing="3",
+            width="100%",
+        ),
+        rx.box(
+            rx.hstack(
+                rx.icon("shield-check", size=14, color="#00c07f"),
+                rx.text("Pago 100% seguro • Encriptado SSL", color="#00c07f", font_size="12px"),
+                spacing="2",
+                align="center",
+            ),
+            padding="8px 12px",
+            background="rgba(0,192,127,0.08)",
+            border="1px solid rgba(0,192,127,0.2)",
+            border_radius="8px",
+        ),
+        spacing="4",
+        width="100%",
+    )
+
+
+def payment_form_wallet() -> rx.Component:
+    return rx.vstack(
+        rx.text("📱 MobilePay", color=WHITE, font_size="16px", font_weight="700"),
+        rx.text("Recibirás una notificación push para aprobar el pago.", color=GRAY_MUTED, font_size="13px"),
+        pay_input("Número de teléfono", "+1 (809) 000-0000", AppState.wallet_phone, AppState.set_wallet_phone, "tel"),
+        rx.box(
+            rx.hstack(
+                rx.icon("smartphone", size=14, color=GOLD_VIP),
+                rx.text("Asegúrate de tener la app MobilePay instalada", color=GOLD_VIP, font_size="12px"),
+                spacing="2",
+                align="center",
+            ),
+            padding="8px 12px",
+            background="rgba(245,197,24,0.08)",
+            border="1px solid rgba(245,197,24,0.2)",
+            border_radius="8px",
+        ),
+        spacing="4",
+        width="100%",
+    )
+
+
+def payment_form_transfer() -> rx.Component:
+    return rx.vstack(
+        rx.text("🏦 CineTransfer", color=WHITE, font_size="16px", font_weight="700"),
+        rx.text("Transfiere desde tu banco de forma instantánea.", color=GRAY_MUTED, font_size="13px"),
+        pay_input("Banco de origen", "Ej: Banco Popular, BHD, Scotiabank", AppState.transfer_bank, AppState.set_transfer_bank),
+        pay_input("Número de cuenta / RNC", "000-000000-0", AppState.transfer_account, AppState.set_transfer_account),
+        rx.box(
+            rx.vstack(
+                rx.text("Cuenta destino CineMax:", color=WHITE_MUTED, font_size="12px", font_weight="700"),
+                rx.text("Banco: CineBank Nacional", color=GRAY_MUTED, font_size="12px"),
+                rx.text("Cuenta: 001-234567-8 (CTA. CTE)", color=GRAY_MUTED, font_size="12px"),
+                rx.text("Titular: Cinemax Entertainment S.A.", color=GRAY_MUTED, font_size="12px"),
+                align_items="start",
+                spacing="1",
+            ),
+            padding="12px",
+            background="rgba(0,180,120,0.08)",
+            border="1px solid rgba(0,180,120,0.2)",
+            border_radius="8px",
+        ),
+        spacing="4",
+        width="100%",
+    )
+
+
+def payment_form_credits() -> rx.Component:
+    return rx.vstack(
+        rx.text("💵 CineCredits", color=WHITE, font_size="16px", font_weight="700"),
+        rx.box(
+            rx.vstack(
+                rx.hstack(
+                    rx.text("Saldo disponible:", color=WHITE_MUTED, font_size="13px"),
+                    rx.text("RD$ 2,500.00", color=GOLD_VIP, font_size="18px", font_weight="800"),
+                    justify="between",
+                    width="100%",
+                    align="center",
+                ),
+                rx.box(width="100%", height="1px", background="rgba(255,255,255,0.08)"),
+                rx.hstack(
+                    rx.text("A descontar:", color=WHITE_MUTED, font_size="13px"),
+                    rx.text("RD$ ", AppState.total_price, color=RED_CINE, font_size="16px", font_weight="700"),
+                    justify="between",
+                    width="100%",
+                    align="center",
+                ),
+                spacing="3",
+            ),
+            padding="1rem",
+            background="rgba(100,100,255,0.06)",
+            border="1px solid rgba(100,100,255,0.2)",
+            border_radius="10px",
+        ),
+        rx.text("Al confirmar, el monto se descontará automáticamente de tu saldo CineCredits.", color=GRAY_MUTED, font_size="12px"),
+        spacing="4",
+        width="100%",
+    )
+
+
+def payment_step_form() -> rx.Component:
+    return rx.vstack(
+        # Back button
+        rx.button(
+            rx.hstack(rx.icon("arrow-left", size=15), rx.text("Cambiar método"), spacing="2", align="center"),
+            on_click=AppState.go_back_to_methods,
+            background="transparent",
+            color=GRAY_MUTED,
+            border="1px solid rgba(255,255,255,0.1)",
+            border_radius="8px",
+            padding="8px 14px",
+            font_size="13px",
+            cursor="pointer",
+            _hover={"color": WHITE, "border_color": "rgba(255,255,255,0.3)"},
+        ),
+
+        # Dynamic form
+        rx.cond(AppState.selected_payment_method == "card", payment_form_card(), rx.box()),
+        rx.cond(AppState.selected_payment_method == "wallet", payment_form_wallet(), rx.box()),
+        rx.cond(AppState.selected_payment_method == "transfer", payment_form_transfer(), rx.box()),
+        rx.cond(AppState.selected_payment_method == "credits", payment_form_credits(), rx.box()),
+
+        # Order summary mini
+        rx.box(
+            rx.hstack(
+                rx.vstack(
+                    rx.text("Asientos", color=GRAY_MUTED, font_size="12px"),
+                    rx.text(AppState.selected_seats.join(", "), color=WHITE, font_size="13px", font_weight="600"),
+                    align_items="start", spacing="0",
+                ),
+                rx.vstack(
+                    rx.text("Total", color=GRAY_MUTED, font_size="12px"),
+                    rx.text("RD$ ", AppState.total_price, color=GOLD_VIP, font_size="18px", font_weight="800"),
+                    align_items="end", spacing="0",
+                ),
+                justify="between",
+                width="100%",
+                align="center",
+            ),
+            padding="1rem",
+            background="rgba(255,255,255,0.03)",
+            border="1px solid rgba(255,255,255,0.08)",
+            border_radius="10px",
+        ),
+
+        rx.button(
+            rx.hstack(rx.icon("credit-card", size=18), rx.text("Pagar ahora"), spacing="2", align="center"),
+            on_click=AppState.process_payment,
+            background=RED_CINE,
+            color=WHITE,
+            border="none",
+            border_radius="10px",
+            padding="14px",
+            font_size="15px",
+            font_weight="700",
+            cursor="pointer",
+            width="100%",
+            _hover={"background": RED_HOVER, "transform": "translateY(-1px)", "box_shadow": "0 6px 20px rgba(229,9,20,0.4)"},
+            transition="all 0.2s ease",
+        ),
+
+        spacing="4",
+        width="100%",
+        align_items="start",
+    )
+
+
+# ─── STEP 3: PROCESSING ───────────────────────────────────────────────────────
+
+def payment_step_processing() -> rx.Component:
+    return rx.vstack(
+        rx.box(height="20px"),
+        rx.box(
+            rx.spinner(size="3", color=RED_CINE),
+            display="flex",
+            justify_content="center",
+        ),
+        rx.vstack(
+            rx.text("Procesando tu pago...", color=WHITE, font_size="20px", font_weight="700", text_align="center"),
+            rx.text("Por favor no cierres esta ventana.", color=GRAY_MUTED, font_size="13px", text_align="center"),
+            align_items="center",
+            spacing="2",
+        ),
+        rx.box(height="20px"),
+        rx.button(
+            "Confirmar pago (simulado)",
+            on_click=AppState.finalize_payment,
+            background="rgba(0,192,127,0.15)",
+            color="#00c07f",
+            border="1px solid rgba(0,192,127,0.3)",
+            border_radius="10px",
+            padding="12px",
+            font_size="14px",
+            font_weight="600",
+            cursor="pointer",
+            width="100%",
+        ),
+        spacing="5",
+        width="100%",
+        align_items="center",
+    )
+
+
+# ─── PAYMENT MODAL ────────────────────────────────────────────────────────────
+
+def payment_modal() -> rx.Component:
+    return rx.cond(
+        AppState.show_payment_modal,
+        rx.box(
+            # Overlay
+            rx.box(
+                on_click=AppState.close_payment_modal,
+                position="fixed",
+                top="0",
+                left="0",
+                right="0",
+                bottom="0",
+                background="rgba(0,0,0,0.75)",
+                z_index="1000",
+                backdrop_filter="blur(4px)",
+            ),
+            # Modal panel
+            rx.box(
+                rx.vstack(
+                    # Header
+                    rx.hstack(
+                        rx.vstack(
+                            rx.text("MÉTODO DE PAGO", color=GRAY_MUTED, font_size="11px", font_weight="700", letter_spacing="2"),
+                            rx.text("Cinemax Checkout", color=WHITE, font_size="18px", font_weight="800"),
+                            align_items="start",
+                            spacing="0",
+                        ),
+                        rx.button(
+                            rx.icon("x", size=18),
+                            on_click=AppState.close_payment_modal,
+                            background="rgba(255,255,255,0.08)",
+                            color=WHITE,
+                            border="none",
+                            border_radius="8px",
+                            padding="8px",
+                            cursor="pointer",
+                            _hover={"background": "rgba(255,255,255,0.15)"},
+                        ),
+                        justify="between",
+                        width="100%",
+                        align="center",
+                    ),
+
+                    rx.box(width="100%", height="1px", background="rgba(255,255,255,0.08)"),
+
+                    # Dynamic content
+                    rx.cond(AppState.payment_step == "select", payment_step_select(), rx.box()),
+                    rx.cond(AppState.payment_step == "form", payment_step_form(), rx.box()),
+                    rx.cond(AppState.payment_step == "processing", payment_step_processing(), rx.box()),
+
+                    spacing="4",
+                    width="100%",
+                    padding="1.5rem",
+                ),
+                position="fixed",
+                top="50%",
+                left="50%",
+                transform="translate(-50%, -50%)",
+                background=GRAY_DARK,
+                border="1px solid rgba(255,255,255,0.1)",
+                border_radius="20px",
+                width=["92vw", "480px"],
+                max_height="90vh",
+                overflow_y="auto",
+                z_index="1001",
+                box_shadow="0 40px 80px rgba(0,0,0,0.8)",
+            ),
+            position="fixed",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            z_index="999",
+        ),
+        rx.box(),
+    )
+
+
+# ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 def reservas_page() -> rx.Component:
     return rx.box(
@@ -261,6 +704,7 @@ def reservas_page() -> rx.Component:
 
         footer(),
         toast(),
+        payment_modal(),
         font_family=FONT_BODY,
         background=BLACK_CINEMA,
     )

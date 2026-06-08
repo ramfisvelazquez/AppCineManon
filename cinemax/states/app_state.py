@@ -621,7 +621,7 @@ class AppState(rx.State):
 
         try:
             rows = query(
-                "SELECT nombre, password_hash FROM usuarios WHERE email = %s",
+                "SELECT nombre, password_hash, rol FROM usuarios WHERE email = %s",
                 (self.login_email,)
             )
         except Exception as e:
@@ -641,12 +641,13 @@ class AppState(rx.State):
         # ── Éxito ─────────────────────────────────────────────────────
         self.is_logged_in = True
         self.user_name = user["nombre"]
+        self.user_rol = user["rol"]
         self.auth_error = ""
         self.show_toast(f"¡Bienvenido, {self.user_name}! 🎬", "success")
         destination = self.redirect_after_login if self.redirect_after_login else "/"
         self.redirect_after_login = "/"
         return rx.redirect(destination)
-    
+        
     def handle_register(self):
         from cinemax.utils.db import execute, query
 
@@ -698,6 +699,7 @@ class AppState(rx.State):
     def handle_logout(self):
         self.is_logged_in = False
         self.user_name = ""
+        self.user_rol = ""
         self.show_toast("Sesión cerrada", "info")
         return rx.redirect("/")
 

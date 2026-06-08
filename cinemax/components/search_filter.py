@@ -97,7 +97,7 @@ def category_filter() -> rx.Component:
 
 def sort_select() -> rx.Component:
     return rx.select(
-        ["nombre", "precio", "duracion", "calificacion_tmdb", "popularidad"],
+        ["nombre", "precio", "duracion"],
         placeholder="Ordenar por...",
         on_change=AppState.set_sort,
         background=GRAY_DARK,

@@ -15,6 +15,7 @@ from cinemax.pages.pelicula import movie_detail_page
 from cinemax.pages.reservas import reservas_page
 from cinemax.pages.login import login_page
 from cinemax.pages.registro import registro_page
+from cinemax.pages.mis_reservas import mis_reservas_page
 from cinemax.states.app_state import AppState
 from cinemax.pages.styles.theme import BLACK_CINEMA, FONT_BODY
 
@@ -81,6 +82,10 @@ def registro() -> rx.Component:
     return registro_page()
 
 
+def mis_reservas() -> rx.Component:
+    return mis_reservas_page()
+
+
 # ── App ───────────────────────────────────────────────────────────────
 app = rx.App(
     theme=rx.theme(
@@ -105,3 +110,8 @@ app.add_page(pelicula_id, route="/pelicula/[movie_id]", on_load=AppState.load_mo
 app.add_page(reservas, route="/reservas", on_load=AppState.on_load)
 app.add_page(login, route="/login")
 app.add_page(registro, route="/registro")
+app.add_page(
+    mis_reservas,
+    route="/mis-reservas",
+    on_load=AppState.on_load_mis_reservas,
+)

@@ -100,7 +100,7 @@ def hero_section() -> rx.Component:
                         rx.button(
                             rx.hstack(
                                 rx.icon("play", size=16),
-                                rx.text("Ver ahora"),
+                                rx.text("Visualizar"),
                                 spacing="2",
                                 align="center",
                             ),

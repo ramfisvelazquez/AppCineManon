@@ -42,46 +42,6 @@ def catalogo_page() -> rx.Component:
                 border_bottom="1px solid rgba(255,255,255,0.05)",
             ),
 
-            # TMDB Section Tabs
-            rx.box(
-                rx.hstack(
-                    *[
-                        rx.button(
-                            label,
-                            on_click=AppState.set_tmdb_section(section),
-                            background=rx.cond(
-                                AppState.tmdb_section == section,
-                                RED_CINE,
-                                "transparent",
-                            ),
-                            color=rx.cond(AppState.tmdb_section == section, WHITE, GRAY_MUTED),
-                            border=rx.cond(
-                                AppState.tmdb_section == section,
-                                f"1px solid {RED_CINE}",
-                                "1px solid rgba(255,255,255,0.1)",
-                            ),
-                            border_radius="6px",
-                            padding="6px 16px",
-                            font_size="13px",
-                            font_weight="600",
-                            cursor="pointer",
-                            _hover={"opacity": "0.85"},
-                        )
-                        for section, label in [
-                            ("todos",     "🎬 Todos"),
-                            ("trending",  "🔥 Tendencias"),
-                            ("top_rated", "⭐ Mejor calificadas"),
-                            ("upcoming",  "🚀 Próximos estrenos"),
-                        ]
-                    ],
-                    spacing="2",
-                    flex_wrap="wrap",
-                ),
-                padding=["1rem 1.5rem", "1rem 2rem", "1rem 4rem"],
-                background="rgba(0,0,0,0.3)",
-                border_bottom="1px solid rgba(255,255,255,0.05)",
-            ),
-
             # Search & Filters
             rx.box(
                 rx.flex(

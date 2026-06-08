@@ -63,8 +63,8 @@ def registro_page() -> rx.Component:
                 rx.vstack(
                     rx.vstack(
                         rx.hstack(
-                            rx.text("C", color=RED_CINE, font_size="2.5rem", font_family=FONT_HEADING),
-                            rx.text("INEMAX", color=WHITE, font_size="2.5rem", font_family=FONT_HEADING),
+                            rx.text("K", color=RED_CINE, font_size="2.5rem", font_family=FONT_HEADING),
+                            rx.text("ANKYCINE", color=WHITE, font_size="2.5rem", font_family=FONT_HEADING),
                             spacing="0",
                         ),
                         rx.text("Crea tu cuenta premium", color=GRAY_MUTED, font_size="15px"),

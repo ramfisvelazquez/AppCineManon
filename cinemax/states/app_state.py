@@ -613,7 +613,6 @@ class AppState(rx.State):
     def set_register_confirm(self, val: str): self.register_confirm = val
 
     def handle_login(self):
-        import hashlib
         from cinemax.utils.db import query
 
         if not self.login_email or not self.login_password:
@@ -634,22 +633,14 @@ class AppState(rx.State):
             return
 
         user = rows[0]
-        stored = user["password_hash"]
 
-        # Verificar el hash: formato salt:hash
-        try:
-            salt, hashed = stored.split(":", 1)
-            attempt = hashlib.sha256((salt + self.login_password).encode()).hexdigest()
-            if attempt != hashed:
-                self.auth_error = "Correo o contraseña incorrectos"
-                return
-        except Exception:
-            self.auth_error = "Error al verificar contraseña"
+        if user["password_hash"] != self.login_password:
+            self.auth_error = "Correo o contraseña incorrectos"
             return
 
         # ── Éxito ─────────────────────────────────────────────────────
         self.is_logged_in = True
-        self.user_name = user["nombre"]   # <-- nombre real de la BD
+        self.user_name = user["nombre"]
         self.auth_error = ""
         self.show_toast(f"¡Bienvenido, {self.user_name}! 🎬", "success")
         destination = self.redirect_after_login if self.redirect_after_login else "/"
@@ -657,7 +648,6 @@ class AppState(rx.State):
         return rx.redirect(destination)
     
     def handle_register(self):
-        import bcrypt
         from cinemax.utils.db import execute, query
 
         # ── Validaciones básicas ──────────────────────────────────────
@@ -685,17 +675,11 @@ class AppState(rx.State):
             self.auth_error = f"Error de conexión: {str(e)}"
             return
 
-        # ── Hash de la contraseña ─────────────────────────────────────
-        password_hash = bcrypt.hashpw(
-            self.register_password.encode("utf-8"),
-            bcrypt.gensalt()
-        ).decode("utf-8")
-
         # ── Insertar en la BD ─────────────────────────────────────────
         try:
             execute(
                 "INSERT INTO usuarios (nombre, email, password_hash) VALUES (%s, %s, %s)",
-                (self.register_name, self.register_email, password_hash)
+                (self.register_name, self.register_email, self.register_password)
             )
         except Exception as e:
             self.auth_error = f"No se pudo crear la cuenta: {str(e)}"

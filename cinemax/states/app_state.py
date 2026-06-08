@@ -233,7 +233,10 @@ class AppState(rx.State):
     # ─── AUTH ─────────────────────────────────────────────────────────
     is_logged_in: bool = False
     user_name: str = ""
+<<<<<<< HEAD
     user_rol: str = ""
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
     login_email: str = ""
     login_password: str = ""
     register_name: str = ""
@@ -614,6 +617,7 @@ class AppState(rx.State):
     def set_register_confirm(self, val: str): self.register_confirm = val
 
     def handle_login(self):
+<<<<<<< HEAD
         from cinemax.utils.db import query
 
         if not self.login_email or not self.login_password:
@@ -643,16 +647,28 @@ class AppState(rx.State):
         self.is_logged_in = True
         self.user_name = user["nombre"]
         self.user_rol = user["rol"]
+=======
+        if not self.login_email or not self.login_password:
+            self.auth_error = "Por favor completa todos los campos"
+            return
+        self.is_logged_in = True
+        self.user_name = self.login_email.split("@")[0].title()
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.auth_error = ""
         self.show_toast(f"¡Bienvenido, {self.user_name}! 🎬", "success")
         destination = self.redirect_after_login if self.redirect_after_login else "/"
         self.redirect_after_login = "/"
         return rx.redirect(destination)
+<<<<<<< HEAD
         
     def handle_register(self):
         from cinemax.utils.db import execute, query
 
         # ── Validaciones básicas ──────────────────────────────────────
+=======
+
+    def handle_register(self):
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         if not all([self.register_name, self.register_email,
                     self.register_password, self.register_confirm]):
             self.auth_error = "Por favor completa todos los campos"
@@ -660,6 +676,7 @@ class AppState(rx.State):
         if self.register_password != self.register_confirm:
             self.auth_error = "Las contraseñas no coinciden"
             return
+<<<<<<< HEAD
         if len(self.register_password) < 8:
             self.auth_error = "La contraseña debe tener al menos 8 caracteres"
             return
@@ -688,6 +705,8 @@ class AppState(rx.State):
             return
 
         # ── Éxito ─────────────────────────────────────────────────────
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.is_logged_in = True
         self.user_name = self.register_name
         self.auth_error = ""
@@ -695,12 +714,18 @@ class AppState(rx.State):
         destination = self.redirect_after_login if self.redirect_after_login else "/"
         self.redirect_after_login = "/"
         return rx.redirect(destination)
+<<<<<<< HEAD
     
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
 
     def handle_logout(self):
         self.is_logged_in = False
         self.user_name = ""
+<<<<<<< HEAD
         self.user_rol = ""
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.show_toast("Sesión cerrada", "info")
         return rx.redirect("/")
 
@@ -772,8 +797,12 @@ class AppState(rx.State):
             return self.transfer_form_valid
         if m == "credits":
             return True
+<<<<<<< HEAD
         return False
 
     @rx.var
     def is_admin(self) -> bool:
         return self.is_logged_in and self.user_rol == "admin"
+=======
+        return False
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9

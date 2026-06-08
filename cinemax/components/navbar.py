@@ -63,6 +63,7 @@ def navbar() -> rx.Component:
                     ),
                     rx.box(),  # nada si no está autenticado
                 ),
+<<<<<<< HEAD
                 # Admin link — solo para administradores
                 rx.cond(
                     AppState.is_admin,
@@ -84,6 +85,8 @@ def navbar() -> rx.Component:
                     ),
                     rx.box(),
                 ),
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
                 spacing="6",
                 display=["none", "none", "flex"],
                 align="center",
@@ -191,6 +194,7 @@ def navbar() -> rx.Component:
                         ),
                         rx.box(),
                     ),
+<<<<<<< HEAD
                     rx.cond(
                         AppState.is_admin,
                         rx.link(
@@ -207,6 +211,8 @@ def navbar() -> rx.Component:
                         ),
                         rx.box(),
                     ),
+=======
+>>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
                     rx.divider(border_color="rgba(255,255,255,0.1)"),
                     # Auth links móvil
                     rx.cond(

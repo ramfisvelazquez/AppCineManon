@@ -233,6 +233,7 @@ class AppState(rx.State):
     # ─── AUTH ─────────────────────────────────────────────────────────
     is_logged_in: bool = False
     user_name: str = ""
+    user_rol: str = ""
     login_email: str = ""
     login_password: str = ""
     register_name: str = ""
@@ -772,3 +773,7 @@ class AppState(rx.State):
         if m == "credits":
             return True
         return False
+
+    @rx.var
+    def is_admin(self) -> bool:
+        return self.is_logged_in and self.user_rol == "admin"

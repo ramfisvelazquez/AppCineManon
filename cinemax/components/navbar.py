@@ -63,6 +63,27 @@ def navbar() -> rx.Component:
                     ),
                     rx.box(),  # nada si no está autenticado
                 ),
+                # Admin link — solo para administradores
+                rx.cond(
+                    AppState.is_admin,
+                    rx.link(
+                        rx.hstack(
+                            rx.icon("shield-check", size=14),
+                            rx.text("Admin"),
+                            spacing="1",
+                            align="center",
+                        ),
+                        href="/admin",
+                        color=RED_CINE,
+                        font_size="14px",
+                        font_weight="700",
+                        text_decoration="none",
+                        padding="6px 0",
+                        transition="color 0.2s ease",
+                        _hover={"color": RED_HOVER},
+                    ),
+                    rx.box(),
+                ),
                 spacing="6",
                 display=["none", "none", "flex"],
                 align="center",
@@ -163,6 +184,22 @@ def navbar() -> rx.Component:
                                 spacing="2", align="center",
                             ),
                             href="/mis-reservas",
+                            text_decoration="none",
+                            font_size="16px",
+                            padding="8px 0",
+                            width="100%",
+                        ),
+                        rx.box(),
+                    ),
+                    rx.cond(
+                        AppState.is_admin,
+                        rx.link(
+                            rx.hstack(
+                                rx.icon("shield-check", size=16, color=RED_CINE),
+                                rx.text("Admin", color=RED_CINE, font_weight="700"),
+                                spacing="2", align="center",
+                            ),
+                            href="/admin",
                             text_decoration="none",
                             font_size="16px",
                             padding="8px 0",

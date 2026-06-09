@@ -6,25 +6,17 @@
     "categoria": "Ciencia Ficción",
     "duracion": "166 min",
     "clasificacion": "PG-13",
-<<<<<<< HEAD
     "precio": 360.0,
-=======
-    "precio": 350,
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
     "vip": true,
     "imagen": "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
     "banner": "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
     "trailer": "https://www.youtube.com/embed/Way9Dexny3w",
-<<<<<<< HEAD
     "horarios": [
       "14:00",
       "17:30",
       "21:00",
       "23:30"
     ]
-=======
-    "horarios": ["14:00", "17:30", "21:00", "23:30"]
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
   },
   {
     "id": "2",
@@ -38,15 +30,11 @@
     "imagen": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
     "banner": "https://image.tmdb.org/t/p/original/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg",
     "trailer": "https://www.youtube.com/embed/uYPbbksJxIg",
-<<<<<<< HEAD
     "horarios": [
       "13:00",
       "16:30",
       "20:00"
     ]
-=======
-    "horarios": ["13:00", "16:30", "20:00"]
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
   },
   {
     "id": "3",
@@ -60,16 +48,12 @@
     "imagen": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
     "banner": "https://image.tmdb.org/t/p/original/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
     "trailer": "https://www.youtube.com/embed/73_1biulkYk",
-<<<<<<< HEAD
     "horarios": [
       "15:00",
       "18:00",
       "21:00",
       "00:00"
     ]
-=======
-    "horarios": ["15:00", "18:00", "21:00", "00:00"]
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
   },
   {
     "id": "4",
@@ -83,16 +67,12 @@
     "imagen": "https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
     "banner": "https://image.tmdb.org/t/p/original/xg27NrXi7VXCGUr7MG75UqLl21M.jpg",
     "trailer": "https://www.youtube.com/embed/LEjhY15eCx0",
-<<<<<<< HEAD
     "horarios": [
       "11:00",
       "13:30",
       "16:00",
       "18:30"
     ]
-=======
-    "horarios": ["11:00", "13:30", "16:00", "18:30"]
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
   },
   {
     "id": "5",
@@ -106,7 +86,6 @@
     "imagen": "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg",
     "banner": "https://image.tmdb.org/t/p/original/9SSEUrSqhljBMzRe4aBTh17rUaC.jpg",
     "trailer": "https://www.youtube.com/embed/YEFSHJzOY0E",
-<<<<<<< HEAD
     "horarios": [
       "19:00",
       "21:30",
@@ -131,25 +110,6 @@
       "21:00"
     ]
   },
-=======
-    "horarios": ["19:00", "21:30", "23:59"]
-  },
-  
-    {
-  "id": "6",
-  "nombre": "Coraline y la puerta secreta",
-  "descripcion": "Una niña descubre una puerta secreta en su nueva casa que la lleva a un mundo alternativo aparentemente perfecto, aunque esconde oscuros secretos.",
-  "categoria": "Animación",
-  "duracion": "100 min",
-  "clasificacion": "PG",
-  "precio": 330,
-  "vip": false,
-  "imagen": "https://image.tmdb.org/t/p/w500/4jeFXQYytChdZYE9JYO7Un87IlW.jpg",
-  "banner": "https://es.rollingstone.com/wp-content/uploads/2024/09/Critica-Coraline-y-la-puerta-secreta.jpg",
-  "trailer": "https://www.youtube.com/embed/m9bOpeuvNwY",
-  "horarios": ["15:00", "18:00", "21:00"]
-},
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
   {
     "id": "7",
     "nombre": "Furiosa: De la saga Mad Max",
@@ -162,7 +122,6 @@
     "imagen": "https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg",
     "banner": "https://image.tmdb.org/t/p/original/lS0gWYFCPPGKdxtEfpkCLhR3PJj.jpg",
     "trailer": "https://www.youtube.com/embed/XJMuhwVlca4",
-<<<<<<< HEAD
     "horarios": [
       "16:00",
       "19:00",
@@ -188,22 +147,3 @@
     ]
   }
 ]
-=======
-    "horarios": ["16:00", "19:00", "22:00"]
-  },
-  {
-  "id": "8",
-  "nombre": "Un paseo para recordar",
-  "descripcion": "Un joven rebelde conoce a una chica tranquila y bondadosa que cambiará su vida para siempre a través de una inesperada historia de amor.",
-  "categoria": "Romance",
-  "duracion": "101 min",
-  "clasificacion": "PG",
-  "precio": 330,
-  "vip": false,
-  "imagen": "https://m.media-amazon.com/images/M/MV5BZDJiZTViZTAtZjBiMy00YjNjLWE4ZDctNjdmYzUyNWIyNWZhXkEyXkFqcGc@._V1_.jpg",
-  "banner": "https://occ-0-8407-114.1.nflxso.net/dnm/api/v6/MgXQGyNr1xbI8tJSYiMWv5kXg5g/AAAABZDX2H3JysSfL4drCfQi1BYfTYO_z4wBeML74exaV9OCl8w3s-nt_SR-GKc-iWYtQiSCtk8R-NZFbNkrIuC05B3okpg2oLYG2TZiLljXG_N2C1boU5dyZaBbsQ.jpg?r=ddc",
-  "trailer": "https://www.youtube.com/embed/ZnpMsaha880",
-  "horarios": ["14:30", "17:30", "20:30"]
-}
-]
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9

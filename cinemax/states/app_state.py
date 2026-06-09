@@ -152,6 +152,11 @@ class AppState(rx.State):
     search_query: str = ""
     active_category: str = "Todos"
     sort_by: str = "nombre"
+    show_vip_only: bool = False
+
+    # ─── SUCURSAL ─────────────────────────────────────────────────────
+    selected_branch: str = "Downtown Center"
+    BRANCHES: List[str] = ["Downtown Center", "Agora Mall", "Galeria 360", "Bluemall"]
 
     # ─── UI STATE ─────────────────────────────────────────────────────
     mobile_menu_open: bool = False
@@ -222,6 +227,7 @@ class AppState(rx.State):
     ticket_showtime: str = ""
     ticket_movie: str = ""
     ticket_hall: str = ""
+    ticket_branch: str = ""
     ticket_total: float = 0.0
     ticket_date: str = ""
     ticket_payment_method: str = ""
@@ -233,10 +239,7 @@ class AppState(rx.State):
     # ─── AUTH ─────────────────────────────────────────────────────────
     is_logged_in: bool = False
     user_name: str = ""
-<<<<<<< HEAD
     user_rol: str = ""
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
     login_email: str = ""
     login_password: str = ""
     register_name: str = ""
@@ -249,8 +252,8 @@ class AppState(rx.State):
 
     def on_load(self):
         self.movies = load_movies()
-        self.filtered_movies = self.movies
         self.categories = get_categories()
+        self._apply_filters()
 
     def load_movie(self):
         movie_id = self.router.page.params.get("movie_id", "")
@@ -275,19 +278,31 @@ class AppState(rx.State):
 
     def set_search(self, query: str):
         self.search_query = query
+        self.show_vip_only = False
         self._apply_filters()
 
     def set_category(self, category: str):
         self.active_category = category
+        self.show_vip_only = False
         self._apply_filters()
 
     def set_sort(self, by: str):
         self.sort_by = by
         self._apply_filters()
 
+    def go_to_vip_catalog(self):
+        """Activa el filtro VIP y navega al catálogo mostrando solo películas VIP."""
+        self.show_vip_only = True
+        self.search_query = ""
+        self.active_category = "Todos"
+        self._apply_filters()
+        return rx.redirect("/catalogo")
+
     def _apply_filters(self):
         results = search_movies(self.search_query)
-        if self.active_category != "Todos":
+        if self.show_vip_only:
+            results = [m for m in results if m.get("vip", False)]
+        elif self.active_category != "Todos":
             results = [m for m in results if m.get("categoria") == self.active_category]
         self.filtered_movies = sort_movies(results, self.sort_by)
 
@@ -453,6 +468,7 @@ class AppState(rx.State):
         self.ticket_showtime = showtime
         self.ticket_movie = movie_name
         self.ticket_hall = hall
+        self.ticket_branch = self.selected_branch
         self.ticket_total = total
         self.ticket_date = purchase_dt
         self.ticket_payment_method = _payment_method_label(method_used)
@@ -466,6 +482,7 @@ class AppState(rx.State):
             "date": date_str,
             "time": time_str,
             "hall": hall,
+            "branch": self.selected_branch,
             "seats": seats,
             "seat_count": len(seats),
             "total": total,
@@ -498,6 +515,7 @@ class AppState(rx.State):
         self.ticket_showtime = b.get("time", "")
         self.ticket_movie = b.get("movie", "")
         self.ticket_hall = b.get("hall", "")
+        self.ticket_branch = b.get("branch", "")
         self.ticket_total = float(b.get("total", 0))
         self.ticket_date = b.get("purchase_date", "")
         self.ticket_payment_method = b.get("payment_method", "")
@@ -601,6 +619,11 @@ class AppState(rx.State):
         new_history[index] = entry
         self.booking_history = new_history
 
+    # ─── SUCURSAL ─────────────────────────────────────────────────────
+
+    def set_branch(self, branch: str):
+        self.selected_branch = branch
+
     # ─── HORARIOS ─────────────────────────────────────────────────────
 
     def set_showtime(self, time: str):
@@ -617,7 +640,6 @@ class AppState(rx.State):
     def set_register_confirm(self, val: str): self.register_confirm = val
 
     def handle_login(self):
-<<<<<<< HEAD
         from cinemax.utils.db import query
 
         if not self.login_email or not self.login_password:
@@ -647,28 +669,16 @@ class AppState(rx.State):
         self.is_logged_in = True
         self.user_name = user["nombre"]
         self.user_rol = user["rol"]
-=======
-        if not self.login_email or not self.login_password:
-            self.auth_error = "Por favor completa todos los campos"
-            return
-        self.is_logged_in = True
-        self.user_name = self.login_email.split("@")[0].title()
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.auth_error = ""
         self.show_toast(f"¡Bienvenido, {self.user_name}! 🎬", "success")
         destination = self.redirect_after_login if self.redirect_after_login else "/"
         self.redirect_after_login = "/"
         return rx.redirect(destination)
-<<<<<<< HEAD
         
     def handle_register(self):
         from cinemax.utils.db import execute, query
 
         # ── Validaciones básicas ──────────────────────────────────────
-=======
-
-    def handle_register(self):
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         if not all([self.register_name, self.register_email,
                     self.register_password, self.register_confirm]):
             self.auth_error = "Por favor completa todos los campos"
@@ -676,7 +686,6 @@ class AppState(rx.State):
         if self.register_password != self.register_confirm:
             self.auth_error = "Las contraseñas no coinciden"
             return
-<<<<<<< HEAD
         if len(self.register_password) < 8:
             self.auth_error = "La contraseña debe tener al menos 8 caracteres"
             return
@@ -705,8 +714,6 @@ class AppState(rx.State):
             return
 
         # ── Éxito ─────────────────────────────────────────────────────
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.is_logged_in = True
         self.user_name = self.register_name
         self.auth_error = ""
@@ -714,18 +721,12 @@ class AppState(rx.State):
         destination = self.redirect_after_login if self.redirect_after_login else "/"
         self.redirect_after_login = "/"
         return rx.redirect(destination)
-<<<<<<< HEAD
     
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
 
     def handle_logout(self):
         self.is_logged_in = False
         self.user_name = ""
-<<<<<<< HEAD
         self.user_rol = ""
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
         self.show_toast("Sesión cerrada", "info")
         return rx.redirect("/")
 
@@ -797,12 +798,8 @@ class AppState(rx.State):
             return self.transfer_form_valid
         if m == "credits":
             return True
-<<<<<<< HEAD
         return False
 
     @rx.var
     def is_admin(self) -> bool:
         return self.is_logged_in and self.user_rol == "admin"
-=======
-        return False
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9

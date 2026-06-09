@@ -16,13 +16,9 @@ from cinemax.pages.reservas import reservas_page
 from cinemax.pages.login import login_page
 from cinemax.pages.registro import registro_page
 from cinemax.pages.mis_reservas import mis_reservas_page
-<<<<<<< HEAD
 from cinemax.pages.admin import admin_page
 from cinemax.states.app_state import AppState
 from cinemax.states.admin_state import AdminState
-=======
-from cinemax.states.app_state import AppState
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
 from cinemax.pages.styles.theme import BLACK_CINEMA, FONT_BODY
 
 
@@ -92,13 +88,10 @@ def mis_reservas() -> rx.Component:
     return mis_reservas_page()
 
 
-<<<<<<< HEAD
 def admin() -> rx.Component:
     return admin_page()
 
 
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
 # ── App ───────────────────────────────────────────────────────────────
 app = rx.App(
     theme=rx.theme(
@@ -128,11 +121,8 @@ app.add_page(
     route="/mis-reservas",
     on_load=AppState.on_load_mis_reservas,
 )
-<<<<<<< HEAD
 app.add_page(
     admin,
     route="/admin",
     on_load=AdminState.load_admin_movies,
 )
-=======
->>>>>>> 38f73dca6b82efd8151fb6700d6f2098eed33da9
